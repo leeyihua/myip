@@ -46,21 +46,51 @@ function extractIpInfo(request: Request): IpInfo {
   };
 }
 
+function isIPv6(ip: string | null): boolean {
+  return ip !== null && ip.includes(":");
+}
+
 function jsonResponse(info: IpInfo): Response {
   return new Response(JSON.stringify(info, null, 2), {
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 }
 
-function row(label: string, value: string | number | null): string {
+function row(label: string, value: string | number | null, id?: string): string {
+  const val = value !== null
+    ? String(value)
+    : '<span class="none">（無）</span>';
   return `
     <tr>
       <td class="label">${label}</td>
-      <td class="value">${value ?? '<span class="none">（無）</span>'}</td>
+      <td class="value"${id ? ` id="${id}"` : ""}>${val}</td>
     </tr>`;
 }
 
 function htmlResponse(info: IpInfo): Response {
+  const showIpv4Row = isIPv6(info.ip);
+
+  const ipv4Row = showIpv4Row ? `
+  <h2>IPv4 位址</h2>
+  <table>
+    <tr>
+      <td class="label">IPv4</td>
+      <td class="value" id="ipv4-val"><span class="loading">查詢中…</span></td>
+    </tr>
+  </table>` : "";
+
+  const ipv4Script = showIpv4Row ? `
+<script>
+  fetch("https://api4.ipify.org?format=json")
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById("ipv4-val").textContent = d.ip || "（無法取得）";
+    })
+    .catch(() => {
+      document.getElementById("ipv4-val").textContent = "（無法取得）";
+    });
+</script>` : "";
+
   const html = `<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -102,6 +132,7 @@ function htmlResponse(info: IpInfo): Response {
   td.label { color: #94a3b8; width: 45%; }
   td.value { color: #e2e8f0; word-break: break-all; }
   .none { color: #475569; font-style: italic; }
+  .loading { color: #475569; font-style: italic; }
   .api-hint {
     margin-top: 1.5rem;
     padding: 0.75rem 1rem;
@@ -117,6 +148,8 @@ function htmlResponse(info: IpInfo): Response {
 <div class="card">
   <h1>我的 IP</h1>
   <div class="ip-main">${info.ip ?? "無法偵測"}</div>
+
+  ${ipv4Row}
 
   <h2>HTTP Headers</h2>
   <table>
@@ -138,6 +171,7 @@ function htmlResponse(info: IpInfo): Response {
     JSON API：<code>GET /api</code> 或加上 <code>Accept: application/json</code> header
   </div>
 </div>
+${ipv4Script}
 </body>
 </html>`;
 
