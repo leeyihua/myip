@@ -9,6 +9,8 @@
 - [x] GitHub repo：https://github.com/leeyihua/myip
 - [x] GitHub Actions 自動部署（push to main 觸發）
 - [x] 部署上線：https://myip.leeyihua.workers.dev
+- [x] IPv6 連線時主顯示區改為顯示 IPv4，IPv6 另列於下方
+- [x] 建立 CLAUDE.md（專案說明文件）
 
 ## 專案架構
 
@@ -18,6 +20,7 @@
 ├── wrangler.toml              # Cloudflare Workers 設定
 ├── package.json
 ├── tsconfig.json
+├── CLAUDE.md                  # Claude Code 專案說明
 ├── .github/workflows/
 │   └── deploy.yml             # GitHub Actions CI/CD
 └── .gitignore
