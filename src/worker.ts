@@ -68,26 +68,33 @@ function row(label: string, value: string | number | null, id?: string): string 
 }
 
 function htmlResponse(info: IpInfo): Response {
-  const showIpv4Row = isIPv6(info.ip);
+  const ipv6 = isIPv6(info.ip);
 
-  const ipv4Row = showIpv4Row ? `
-  <h2>IPv4 位址</h2>
+  // IPv6 時：主顯示區先放 loading，等 client 端查到 IPv4 再填入；另外顯示 IPv6
+  const mainIpDisplay = ipv6
+    ? `<span class="loading" id="ip-main-val">查詢中…</span>`
+    : (info.ip ?? "無法偵測");
+
+  const ipv6Row = ipv6 ? `
+  <h2>IPv6 位址</h2>
   <table>
     <tr>
-      <td class="label">IPv4</td>
-      <td class="value" id="ipv4-val"><span class="loading">查詢中…</span></td>
+      <td class="label">IPv6</td>
+      <td class="value">${info.ip}</td>
     </tr>
   </table>` : "";
 
-  const ipv4Script = showIpv4Row ? `
+  const ipv4Script = ipv6 ? `
 <script>
   fetch("https://api4.ipify.org?format=json")
     .then(r => r.json())
     .then(d => {
-      document.getElementById("ipv4-val").textContent = d.ip || "（無法取得）";
+      document.getElementById("ip-main-val").textContent = d.ip || "（無法取得）";
+      document.getElementById("ip-main-val").className = "";
     })
     .catch(() => {
-      document.getElementById("ipv4-val").textContent = "（無法取得）";
+      document.getElementById("ip-main-val").textContent = "（無法取得）";
+      document.getElementById("ip-main-val").className = "";
     });
 </script>` : "";
 
@@ -147,9 +154,9 @@ function htmlResponse(info: IpInfo): Response {
 <body>
 <div class="card">
   <h1>我的 IP</h1>
-  <div class="ip-main">${info.ip ?? "無法偵測"}</div>
+  <div class="ip-main">${mainIpDisplay}</div>
 
-  ${ipv4Row}
+  ${ipv6Row}
 
   <h2>HTTP Headers</h2>
   <table>
